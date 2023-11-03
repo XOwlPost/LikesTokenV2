@@ -1,0 +1,14 @@
+node_modules
+.env
+coverage
+coverage.json
+typechain
+typechain-types
+.link
+.openzeppelin
+# Hardhat files
+cache
+artifacts
+# Ignore ck file containing sensitive data
+ck
+

@@ -1,0 +1,46 @@
+image:
+  name: likestoken-image
+  dockerfile: Dockerfile
+  registry:
+    url: my-registry.com
+    username: ${{ secrets.REGISTRY_USERNAME }}
+    password: ${{ secrets.REGISTRY_PASSWORD }}
+
+steps:
+- name: Checkout code
+  image: alpine/git
+  commands:
+  - git clone https://github.com/my-username/my-repo.git
+
+- name: Build Docker image
+  image: docker
+  commands:
+  - docker build --cache-from ${{ image.name }}:latest -t ${{ image.name }}:${{ github.sha }} -f ${{ image.dockerfile }} .
+
+- name: Run tests
+  image: node
+  commands:
+  - npm ci
+  - npm test
+
+- name: Scan for vulnerabilities
+  if: ${{ github.event_name == 'push' }}
+  image: aquasec/trivy
+  commands:
+  - trivy image ${{ image.name }}:${{ github.sha }}
+
+- name: Push Docker image
+  if: ${{ success() }}
+  image: docker
+  commands:
+  - echo ${{ secrets.REGISTRY_PASSWORD }} | docker login -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin ${{ image.registry.url }}
+  - docker push ${{ image.name }}:${{ github.sha }}
+
+- name: Notify Slack
+  if: ${{ failure() }}
+  image: plugins/slack
+  settings:
+    webhook: ${{ secrets.SLACK_WEBHOOK }}
+    channel: 'ci-cd-notifications'
+    username: 'ci-bot'
+    template: 'Build {{ build.number }} failed. Commit {{ commit.message }} in {{ repo.name }} by {{ build.author }}.'

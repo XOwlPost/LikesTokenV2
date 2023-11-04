@@ -1,0 +1,29 @@
+{
+    "name": "LikesToken",
+    "version": "2.0.0",
+    "description": "Likes Token V2",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "LikesToken",
+        "LTXO"
+    ],
+    "author": "XO",
+    "license": "MIT",
+    "devDependencies": {
+        "@nomiclabs/hardhat-waffle": "^2.0.6",
+        "chai": "^4.3.10",
+        "ethereum-waffle": "^4.0.10",
+        "ethers": "^6.8.1",
+        "hardhat": "^2.19.0"
+    },
+    "dependencies": {
+        "@chainlink/contracts": "^0.8.0",
+        "@openzeppelin/contracts": "^4.9.3",
+        "@openzeppelin/contracts-upgradeable": "^4.9.3",
+        "axios": "^1.6.0",
+        "tough-cookie": "^4.1.3"
+    }
+}

@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -9,8 +8,8 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./node_modules/openzeppelin/contracts/security/Pausable.sol";
 
 
 interface IModule {
@@ -28,7 +27,7 @@ contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessCo
     AggregatorV3Interface internal priceFeedETHUSD;
     uint256 public tokenPrice;
     uint256 public lastUpdated;
-    uint256 public MAX_SUPPLY = 2006000000 * 10**18;
+    uint256 private constant MAX_SUPPLY = 2006000000 * 10**18;
 
     mapping(address => uint256) public airdropRecipients;
     mapping(address => bool) public allowedModules;
@@ -49,38 +48,42 @@ contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessCo
         _;
     }
 
-    constructor(
-        address[] memory _recipients, 
-        uint256[] memory _amounts,
-        address _gnosisSafe
-    ) ERC20("LIKES", "LIKES") {
-        require(_recipients.length == _amounts.length, "Arrays must be of equal length");
-        
-        gnosisSafe = _gnosisSafe;
+constructor(
+    address[] memory _recipients,
+    uint256[] memory _amounts
+    )
+    ERC20("LikesToken", "LTXO")
+    Ownable()
+{
+    require(_recipients.length == _amounts.length, "Arrays must be of equal length");
 
-        for (uint256 i = 0; i < _recipients.length; i++) {
-            AirdropRecipient memory newRecipient = AirdropRecipient({
-                user: _recipients[i],
-                amount: _amounts[i]
-            });
-            airdropList.push(newRecipient);
-        }
+    gnosisSafe = 0x71bE63f3384f5fb98995898A86B02Fb2426c5788;
 
-        // Minting tokens to Gnosis Safe directly
-        _mint(gnosisSafe, 2006000000 * 10**decimals());
-
-        lastUpdated = block.timestamp;
-        priceFeedETHUSD = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
-        updatePrice();
-
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(PRICE_UPDATER_ROLE, msg.sender);
-        _setupRole(AIRDROPPER_ROLE, msg.sender);
-        _setupRole(MINTER_ROLE, msg.sender);
-        _setupRole(MODULE_ADMIN_ROLE, msg.sender);
+    for (uint256 i = 0; i < _recipients.length; i++) {
+        AirdropRecipient memory newRecipient = AirdropRecipient({
+            user: _recipients[i],
+            amount: _amounts[i]
+        });
+        airdropList.push(newRecipient);
     }
 
+    // Minting tokens to Gnosis Safe directly
+    _mint(gnosisSafe, 2006000000 * 10**decimals());
+
+    lastUpdated = block.timestamp;
+    priceFeedETHUSD = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+    updatePrice();
+
+    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    _grantRole(PRICE_UPDATER_ROLE, msg.sender);
+    _grantRole(AIRDROPPER_ROLE, msg.sender);
+    _grantRole(MINTER_ROLE, msg.sender);
+    _grantRole(MODULE_ADMIN_ROLE, msg.sender);
+}
+
+
     function _mint(address account, uint256 amount) internal override {
+        require(account != address(0), "ERC20: mint to the zero address");
         require(totalSupply() + amount <= MAX_SUPPLY, "Exceeds max supply");
         super._mint(account, amount);
     }
@@ -184,40 +187,5 @@ contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessCo
     function executeModule(address module, address target, uint256 value, bytes calldata data) external onlyGnosisSafe {
     require(allowedModules[module], "Module not allowed");
     IModule(module).execute(target, value, data);
-    }
-}
-
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.9;
-
-// Uncomment this line to use console.log
-// import "hardhat/console.sol";
-
-contract Lock {
-    uint public unlockTime;
-    address payable public owner;
-
-    event Withdrawal(uint amount, uint when);
-
-    constructor(uint _unlockTime) payable {
-        require(
-            block.timestamp < _unlockTime,
-            "Unlock time should be in the future"
-        );
-
-        unlockTime = _unlockTime;
-        owner = payable(msg.sender);
-    }
-
-    function withdraw() public {
-        // Uncomment this line, and the import of "hardhat/console.sol", to print a log in your terminal
-        // console.log("Unlock time is %o and block timestamp is %o", unlockTime, block.timestamp);
-
-        require(block.timestamp >= unlockTime, "You can't withdraw yet");
-        require(msg.sender == owner, "You aren't the owner");
-
-        emit Withdrawal(address(this).balance, block.timestamp);
-
-        owner.transfer(address(this).balance);
     }
 }

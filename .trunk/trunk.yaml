@@ -17,11 +17,11 @@ steps:
   commands:
   - docker build --cache-from ${{ image.name }}:latest -t ${{ image.name }}:${{ github.sha }} -f ${{ image.dockerfile }} .
 
-- name: Run tests
-  image: node
-  commands:
-  - npm ci
-  - npm test
+-  - name: Run tests
+    image: node
+    commands:
+      - yarn install # or 'npm install' if you are not using yarn
+      - npx hardhat test
 
 - name: Scan for vulnerabilities
   if: ${{ github.event_name == 'push' }}

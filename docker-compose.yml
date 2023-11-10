@@ -2,5 +2,17 @@ version: '3'
 services:
   web:
     build: .
+    volumes:
+      - likestoken-data:/app/data
     ports:
       - "80:80"
+  app:
+    build: .
+    volumes:
+      - likestoken-data:/app
+    command: bash -c "yarn install && yarn start"
+    ports:
+      - "3000:3000" # Assuming your app runs on port 3000
+
+volumes:
+  likestoken-data:

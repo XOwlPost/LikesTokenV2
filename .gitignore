@@ -12,3 +12,4 @@ artifacts
 # Ignore ck file containing sensitive data
 ck
 show origin of config
+chat.md

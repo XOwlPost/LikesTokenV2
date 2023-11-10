@@ -4,26 +4,33 @@
     "description": "Likes Token V2",
     "main": "index.js",
     "scripts": {
+        "start": "node app.js",
+        "build": "npx hardhat compile",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [
         "LikesToken",
         "LTXO"
     ],
-    "author": "XO",
-    "license": "MIT",
+    "author": "Team Likecoin.cc",
+    "license": "SPDX-License-Identifier: MIT",
     "devDependencies": {
+        "@nomiclabs/hardhat-ethers": "^2.2.3",
         "@nomiclabs/hardhat-waffle": "^2.0.6",
         "chai": "^4.3.10",
         "ethereum-waffle": "^4.0.10",
-        "ethers": "^6.8.1",
-        "hardhat": "^2.19.0"
+        "ethers": "^5.0.0",
+        "hardhat": "^2.19.0",
+        "typescript": "^5.2.2"
+        
     },
     "dependencies": {
         "@chainlink/contracts": "^0.8.0",
         "@openzeppelin/contracts": "^4.9.3",
         "@openzeppelin/contracts-upgradeable": "^4.9.3",
+        "@types/sinon-chai": "^3.2.11",
         "axios": "^1.6.0",
         "tough-cookie": "^4.1.3"
     }
+   
 }

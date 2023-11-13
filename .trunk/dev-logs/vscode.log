@@ -38,3 +38,39 @@
 2023-11-10T00:21:29.292Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
 2023-11-10T00:21:30.554Z [[32minfo[39m] Unable to retrieve CLI version with error Error: Unable to identify trunk version
 2023-11-10T00:21:33.102Z [[31mcrit[39m] Unable to identify trunk version
+2023-11-10T00:37:22.801Z [[34mdebug[39m] Failed to query identity
+2023-11-10T00:37:23.015Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-10T00:37:24.129Z [[32minfo[39m] Unable to retrieve CLI version with error Error: Unable to identify trunk version
+2023-11-10T00:37:26.069Z [[31mcrit[39m] Unable to identify trunk version
+2023-11-11T14:11:24.453Z [[34mdebug[39m] Failed to query identity
+2023-11-11T14:11:24.872Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-11T14:11:24.876Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-11T14:11:26.943Z [[32minfo[39m] Unable to retrieve CLI version with error Error: Unable to identify trunk version
+2023-11-11T14:11:34.464Z [[31mcrit[39m] Unable to identify trunk version
+2023-11-11T15:11:21.781Z [[34mdebug[39m] Failed to query identity
+2023-11-11T15:11:21.939Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-11T15:11:22.888Z [[32minfo[39m] Unable to retrieve CLI version with error Error: Unable to identify trunk version
+2023-11-11T15:11:25.218Z [[31mcrit[39m] Unable to identify trunk version
+2023-11-11T15:12:22.110Z [[34mdebug[39m] Failed to query identity
+2023-11-11T15:12:22.719Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-11T15:12:22.724Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-11T15:12:24.287Z [[32minfo[39m] Unable to retrieve CLI version with error Error: Unable to identify trunk version
+2023-11-11T15:12:31.071Z [[31mcrit[39m] Unable to identify trunk version
+2023-11-11T15:13:02.353Z [[34mdebug[39m] Failed to query identity
+2023-11-11T15:13:02.949Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-11T15:13:04.293Z [[32minfo[39m] Unable to retrieve CLI version with error Error: Unable to identify trunk version
+2023-11-11T15:13:10.182Z [[31mcrit[39m] Unable to identify trunk version
+2023-11-11T15:14:53.194Z [[34mdebug[39m] Failed to query identity
+2023-11-11T15:14:53.661Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-11T15:14:55.605Z [[32minfo[39m] Unable to retrieve CLI version with error Error: Unable to identify trunk version
+2023-11-11T15:14:57.293Z [[31mcrit[39m] Unable to identify trunk version
+2023-11-11T22:08:46.444Z [[34mdebug[39m] Failed to query identity
+2023-11-11T22:08:46.717Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-11T22:08:46.728Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-11T22:08:48.044Z [[32minfo[39m] Unable to retrieve CLI version with error Error: Unable to identify trunk version
+2023-11-11T22:08:49.856Z [[31mcrit[39m] Unable to identify trunk version
+2023-11-12T22:26:30.030Z [[34mdebug[39m] Failed to query identity
+2023-11-12T22:26:30.240Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-12T22:26:30.246Z [[31mcrit[39m] getaddrinfo ENOTFOUND api.mixpanel.com
+2023-11-12T22:26:31.167Z [[32minfo[39m] Unable to retrieve CLI version with error Error: Unable to identify trunk version
+2023-11-12T22:26:33.678Z [[31mcrit[39m] Unable to identify trunk version

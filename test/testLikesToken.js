@@ -1,26 +1,28 @@
-// SPDX-License-Identifier: MIT
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("LikesToken", function () {
-    let LikesToken;
-    let token;
-    let owner, addr1, addr2, gnosisSafe;
-    let initialRecipients, initialAmounts;
-    let priceUpdater, airdropper, minter, moduleAdmin;
-
+describe("LikesToken Contract", function () {
+    let owner, addr1, addr2, gnosisSafeMock;
     beforeEach(async function () {
-        LikesToken = await ethers.getContractFactory("LikesToken");
-        [owner, addr1, addr2, priceUpdater, airdropper, minter, moduleAdmin, gnosisSafe] = await ethers.getSigners();
-        initialRecipients = [addr1.address, addr2.address];
-        initialAmounts = [ethers.utils.parseEther("100"), ethers.utils.parseEther("100")];
-        token = await LikesToken.deploy(initialRecipients, initialAmounts, gnosisSafe.address);
-        await token.deployed();
+        [owner, addr1, addr2, gnosisSafeMock] = await ethers.getSigners();
+    
+        // Use addresses from the signers for testing
+        const recipients = [addr1.address, addr2.address, gnosisSafeMock.address, owner.address];
+        const amounts = ["10000", "20000", "30000", "40000"]; // Ensure correct token amounts
+    
+        // Deploying the LikesToken contract
+        const LikesToken = await ethers.getContractFactory("LikesToken");
+        likesToken = await LikesToken.deploy(recipients, amounts);
+        await likesToken.deployed();
+    
+        // Additional setup: Assign roles to gnosisSafeMock
+        const GNOSIS_SAFE_ROLE = await likesToken.GNOSIS_SAFE_ROLE(); // Get the role identifier
+        await likesToken.grantRole(GNOSIS_SAFE_ROLE, gnosisSafeMock.address); // Grant the role
     });
 
     it("Should deploy the contract with correct initial configurations", async function () {
-        expect(await token.name()).to.equal("LIKES");
-        expect(await token.symbol()).to.equal("LIKES");
+        expect(await token.name()).to.equal("LikesToken");
+        expect(await token.symbol()).to.equal("LTXO");
         expect(await token.totalSupply()).to.equal(ethers.utils.parseEther("2006000000"));
         expect(await token.balanceOf(gnosisSafe.address)).to.equal(ethers.utils.parseEther("2006000000"));
     });
@@ -28,6 +30,7 @@ describe("LikesToken", function () {
     it("Should only allow PRICE_UPDATER_ROLE to update the price", async function () {
         await token.connect(priceUpdater).updatePrice();
         await expect(token.connect(addr1).updatePrice()).to.be.revertedWith("AccessControl: account 0x123...456 does not have price updater role 0x123...456");
+        contract.connect(account1).updatePrice()
     });
 
     it("Should allow token purchase", async function () {
@@ -36,6 +39,11 @@ describe("LikesToken", function () {
         await token.connect(addr1).purchaseTokens(amountToBuy, { value: priceForAmount });
         expect(await token.balanceOf(addr1.address)).to.equal(amountToBuy);
     });
+
+    afterEach(async function () {
+        // Resetting or cleaning up the state after each test
+    });
+});
 
     describe("LikesToken with Mock Gnosis Safe", function () {
         // ... (other test initializations)
@@ -66,6 +74,12 @@ describe("LikesToken", function () {
             expect(await anotherToken.balanceOf(token.address)).to.equal(0);
             await expect(token.connect(addr1).withdrawERC20Tokens(anotherToken.address, addr2.address)).to.be.revertedWith("Not authorized");
         });
+
+        afterEach(async function () {
+            // Resetting or cleaning up the state after each test
+        });
+    });
+
     
         describe("LikesToken with Mock Gnosis Safe - Negative Tests", function () {
 
@@ -93,6 +107,12 @@ describe("LikesToken", function () {
             it("Should not allow setting a zero address for Gnosis Safe", async function () {
                 await expect(token.setGnosisSafe(ethers.constants.AddressZero)).to.be.revertedWith("Gnosis Safe address cannot be zero address");
             });
+
+            afterEach(async function () {
+                // Resetting or cleaning up the state after each test
+            });
+        });
+
         
             describe("LikesToken Comprehensive Tests", function () {
                 let token, owner, addr1, addr2, addr3, gnosisSafeMock;
@@ -244,8 +264,25 @@ it("Should revert when adding airdrop recipients with mismatched arrays", async 
     await expect(
         token.connect(owner).addAirdropRecipients(newRecipients, newAmounts)
     ).to.be.revertedWith("Arrays must be of equal length");
-});
-}); // End of LikesToken Comprehensive Tests
-}); // End of LikesToken with Mock Gnosis Safe - Negative Tests
+
+    it("should handle transfers correctly", async function() {
+        // Transfer tokens from owner to addr1 and check balances
+        await likesToken.connect(owner).transfer(addr1.address, 100);
+        expect(await likesToken.balanceOf(addr1.address)).to.equal(100);
+    });
+    
+        it("should only allow Gnosis Safe to update settings", async function() {
+            await expect(likesToken.connect(addr1).updateSetting("newSetting")).to.be.revertedWith("Not authorized");
+            // Assuming `updateSetting` is restricted to the Gnosis Safe
+    });
+
+    afterEach(async function () {
+        // Resetting or cleaning up the state after each test
+    });
+
+
+    // End of LikesToken Comprehensive Tests
+    // End of LikesToken Comprehensive Tests
+    // End of LikesToken with Mock Gnosis Safe - Negative Tests
 }); // End of LikesToken with Mock Gnosis Safe
 }); // End of LikesToken Comprehensive Tests

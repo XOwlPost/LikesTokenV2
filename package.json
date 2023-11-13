@@ -12,7 +12,7 @@
         "LikesToken",
         "LTXO"
     ],
-    "author": "Team Likecoin.cc",
+    "author": "Team XO",
     "license": "SPDX-License-Identifier: MIT",
     "devDependencies": {
         "@nomiclabs/hardhat-ethers": "^2.2.3",
@@ -22,15 +22,16 @@
         "ethers": "^5.0.0",
         "hardhat": "^2.19.0",
         "typescript": "^5.2.2"
-        
     },
     "dependencies": {
         "@chainlink/contracts": "^0.8.0",
+        "@gnosis.pm/safe-core-sdk": "^3.2.0",
+        "@gnosis.pm/safe-ethers-lib": "^1.7.0",
         "@openzeppelin/contracts": "^4.9.3",
         "@openzeppelin/contracts-upgradeable": "^4.9.3",
         "@types/sinon-chai": "^3.2.11",
         "axios": "^1.6.0",
+        "dotenv": "^16.3.1",
         "tough-cookie": "^4.1.3"
     }
-   
 }

@@ -1,97 +1,86 @@
-/**
- * @title LikesToken
- * @dev ERC20 token with additional features such as burning, pausing, airdropping, and module execution.
- * @dev Tokens are minted to a Gnosis Safe and can be purchased by sending ETH to the contract.
- * @dev The token price is updated daily based on the ETH/USD price feed from Chainlink.
- * @dev Airdrops can be performed to a list of pre-defined recipients.
- * @dev Modules can be added and executed by a Gnosis Safe.
- */
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.1;
+pragma solidity 0.8.20;
 
+// Importing statements for OpenZeppelin's ERC20 standards, utilities and other dependencies
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";  // Future-proofing module expansions
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/upgrades-core/contracts/Initializable.sol";
 
-
+    // Interface for modular functionality, enabling external modules to execute specific actions
 interface IModule {
     function execute(address target, uint256 value, bytes calldata data) external returns (bool, bytes memory);
 }
 
+// Using directive for SafeERC20
+using SafeERC20 for IERC20;
 
+// Contract declaration
+// The LikesToken contract, inheriting from various OpenZeppelin contracts for standard ERC20 functionality,
+// burnability, pause capability, access control, and reentrancy protection
 contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessControl, Ownable {
-    using SafeERC20 for IERC20;
 
-    bytes32 public constant GNOSIS_SAFE_ROLE = keccak256("GNOSIS_SAFE_ROLE");
+        // Constructor for initializing the token with specific attributes and airdrop details
+    constructor(address[] memory _recipients, uint256[] memory _amounts) 
+    ERC20("LikesToken", "LTXO") 
+    {
+
+    // Defining role constants for access control
+    bytes32 public constant GNOSIS_SAFE_ROLE = keccak256(abi.encodePacked("GNOSIS_SAFE_ROLE"));
     bytes32 public constant PRICE_UPDATER_ROLE = keccak256("PRICE_UPDATER_ROLE");
     bytes32 public constant AIRDROPPER_ROLE = keccak256("AIRDROPPER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant MODULE_ADMIN_ROLE = keccak256("MODULE_ADMIN_ROLE");
 
+    // Variables related to price feed and token economics
     AggregatorV3Interface internal priceFeedETHUSD;
     uint256 public tokenPrice;
     uint256 public lastUpdated;
     uint256 private constant MAX_SUPPLY = 2006000000 * 10**18;
 
+    // Mappings for airdrop recipients and allowed modules
     mapping(address => uint256) public airdropRecipients;
     mapping(address => bool) public allowedModules;
 
+    // Events for logging changes and actions
     event PriceUpdated(uint256 newRate);
     event TokensAirdropped(address recipient, uint256 amount);
 
+    // Struct to keep track of airdrop recipients and amounts
     struct AirdropRecipient {
         address user;
         uint256 amount;
     }
 
+    // Array to store airdrop details
     AirdropRecipient[] public airdropList;
     address public gnosisSafe;
 
+    // Modifier to restrict certain functions to only the Gnosis Safe
     modifier onlyGnosisSafe() {
         require(msg.sender == gnosisSafe, "Not authorized");
         _;
     }
 
-constructor(address[] memory _recipients, uint256[] memory _amounts) 
-    ERC20("LikesToken", "LTXO") 
-{
-    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    _grantRole(PRICE_UPDATER_ROLE, msg.sender);
-    _grantRole(AIRDROPPER_ROLE, msg.sender);
-    _grantRole(MINTER_ROLE, msg.sender);
-    _grantRole(MODULE_ADMIN_ROLE, msg.sender);
-    _grantRole(GNOSIS_SAFE_ROLE, 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+        // Check for matching lengths in recipients and amounts arrays
+        require(_recipients.length == _amounts.length, "Arrays must be of equal length");
+        
+        // Setting Gnosis Safe address
+        gnosisSafe = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
-    Ownable() 
-    
-        // Recipients array
-        const recipients = [
-            "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", 
-            "0x70997970C51812dc3A010C7d01b50e0d17dc79C8", 
-            "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", 
-            "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
-        ];
-    
-        // Amounts array
-        const amounts = ["10000", "20000", "30000", "40000"];
-    
-{
-    require(_recipients.length == _amounts.length, "Arrays must be of equal length");
-    
-    gnosisSafe = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 /* initialize your Gnosis Safe address here */;
-
-    for (uint256 i = 0; i < _recipients.length; i++) {
-        AirdropRecipient memory newRecipient = AirdropRecipient({
-            user: _recipients[i],
-            amount: _amounts[i]
-        });
-        airdropList.push(newRecipient);
-    }
+        // Loop to populate the airdrop list with recipients and their respective amounts
+        for (uint256 i = 0; i < _recipients.length; i++) {
+            AirdropRecipient memory newRecipient = AirdropRecipient({
+                user: _recipients[i],
+                amount: _amounts[i]
+            });
+            airdropList.push(newRecipient);
+        }
 
     // Minting tokens to Gnosis Safe directly
     _mint(gnosisSafe, 2006000000 * 10**decimals());
@@ -103,20 +92,27 @@ constructor(address[] memory _recipients, uint256[] memory _amounts)
     // Granting the DEFAULT_ADMIN_ROLE to the message sender (typically the deployer of the contract).
     // This role has overarching control and can manage other roles and critical functionalities.
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+
     // Granting the PRICE_UPDATER_ROLE to the Gnosis Safe address.
     // This role allows updating the token price, centralizing this sensitive operation.
-    _grantRole(PRICE_UPDATER_ROLE, 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
-    // Granting the AIRDROPPER_ROLE to the message sender.
-    // This role can execute airdrops, enabling the distribution of tokens to multiple addresses.
-    _grantRole(AIRDROPPER_ROLE, msg.sender);
-    // Granting the MINTER_ROLE to the message sender.
-    // This role enables the minting of new tokens, controlling the token supply.
-    _grantRole(MINTER_ROLE, msg.sender);
-    // Granting the MODULE_ADMIN_ROLE to the message sender.
-    // This role is responsible for managing modular functionalities such as adding or removing modules.
-    _grantRole(MODULE_ADMIN_ROLE, msg.sender);
-    }
+    _grantRole(PRICE_UPDATER_ROLE, msg.sender);
 
+    // Granting the AIRDROPPER_ROLE to address 1.
+    // This role can execute airdrops, enabling the distribution of tokens to multiple addresses.
+    _grantRole(AIRDROPPER_ROLE, address.addr1);
+
+    // Granting the MINTER_ROLE to address 2.
+    // This role enables the minting of new tokens, controlling the token supply.
+    _grantRole(MINTER_ROLE, address.addr2);
+
+    // Granting the MODULE_ADMIN_ROLE to address 3.
+    // This role is responsible for managing modular functionalities such as adding or removing modules.
+    _grantRole(MODULE_ADMIN_ROLE, address.addr3;
+
+    // Granting the DAO_ROLE to the message sender.
+    // This role is responsible for managing the DAO, including voting and governance.
+    _grantRole(DAO_ROLE, msg.sender);
+    }
 
     function _mint(address account, uint256 amount) internal override {
         require(account != address(0), "ERC20: mint to the zero address");

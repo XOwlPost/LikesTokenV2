@@ -11,3 +11,6 @@
 2023-11-16T00:58:50.304Z [[34mdebug[39m] Failed to query identity
 2023-11-16T00:58:51.827Z [[32minfo[39m] Unable to retrieve CLI version with error Error: Unable to identify trunk version
 2023-11-16T00:58:54.296Z [[31mcrit[39m] Unable to identify trunk version
+2023-11-16T01:17:28.519Z [[34mdebug[39m] Failed to query identity
+2023-11-16T01:17:30.074Z [[32minfo[39m] Unable to retrieve CLI version with error Error: Unable to identify trunk version
+2023-11-16T01:17:31.981Z [[31mcrit[39m] Unable to identify trunk version

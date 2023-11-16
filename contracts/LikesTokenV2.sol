@@ -155,13 +155,11 @@ contract LikesToken is Initializable, ReentrancyGuardUpgradeable, ERC20Upgradeab
 
     // Granting the DEFAULT_ADMIN_ROLE to the message sender (typically the deployer of the contract).
     // This role has overarching control and can manage other roles and critical functionalities.
-    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender) onlyGnosisSafe nonReentrant {;
-    }
+    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
     // Granting the PRICE_UPDATER_ROLE to the Gnosis Safe address.
     // This role allows updating the token price, centralizing this sensitive operation.
-    _grantRole(PRICE_UPDATER_ROLE, msg.sender) onlyGnosisSafe nonReentrant {;
-    }
+    _grantRole(PRICE_UPDATER_ROLE, msg.sender);
 
     // Granting the AIRDROPPER_ROLE to address 1.
     // This role can execute airdrops, enabling the distribution of tokens to multiple addresses.
@@ -177,12 +175,8 @@ contract LikesToken is Initializable, ReentrancyGuardUpgradeable, ERC20Upgradeab
 
     // Granting the DAO_ROLE to the message sender.
     // This role is responsible for managing the DAO, including voting and governance.
-    _grantRole(DAO_ROLE, msg.sender)onlyGnosisSafe nonReentrant {;
+    _grantRole(DAO_ROLE, msg.sender);
     }
-
-    // Granting the REWARDS_DISTRIBUTOR_ROLE to the message sender.
-    // This role is responsible for distributing rewards to users.
-    _grantRole(REWARDS_DISTRIBUTOR_ROLE, msg.sender) onlyGnosisSafe nonReentrant {
 
 // Mint 25% of MAX_SUPPLY to the deployer or a specified address
 // This is done to ensure that the deployer has enough tokens for liquidity and sales purposes and to execute v1-airdrops
@@ -408,6 +402,18 @@ super._mint(account, amount);
         emit ModulePermissionsRevoked(module);
     }
 
+    // Function to execute a module
+    // This function can only be called by the GNOSIS_SAFE_ROLE
+    function executeModule(address module, address target, uint256 value, bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) nonReentrant {
+        require(allowedModules[module], "Module not allowed");
+        (bool success, bytes memory returnData) = IModule(module).execute(target, value, data);
+        if (success) {
+            emit ModuleExecuted(module, target, value, data);
+        } else {
+            emit ModuleExecutionFailed(module, target, value, data);
+        }
+    }
+
     // Function to airdrop tokens to a list of recipients
     function airdrop(uint256 start, uint256 end) external onlyRole(AIRDROPPER_ROLE) nonReentrant {
         require(start < end, "Start must be less than end");
@@ -436,23 +442,10 @@ super._mint(account, amount);
         }
     }
 
-    // Event for logging the receipt of Ether
     event EtherReceived(address indexed sender, uint256 amount);
         receive() external payable {
 
         emit EtherReceived(msg.sender, msg.value);
-    }
-
-    function addModule(address module) public onlyRole(MODULE_ADMIN_ROLE) {
-    require(module != address(0), "Invalid address");
-    require(!allowedModules[module], "Module already added");
-    allowedModules[module] = true;
-    }
-
-    function removeModule(address module) public
-     onlyRole(MODULE_ADMIN_ROLE) {
-    require(allowedModules[module], "Module not found");
-    allowedModules[module] = false;
     }
 
     // Function to execute a module

@@ -179,5 +179,50 @@ Here’s how it works and what you need to consider:
 ### Conclusion
 
 While inheriting from OpenZeppelin’s upgradeable contracts provides a solid foundation for upgradeability, it doesn’t remove the need for careful planning regarding state variables and contract architecture. Future-proofing an upgradeable contract involves thoughtful initial design and adherence to best practices in contract upgradeability.
+Modifying your `LikesToken` contract to mint only a portion of the tokens at deployment and to include functionality for distributing rewards tokens is a strategic approach that can add flexibility to your token economics. Here's how you can implement these changes:
 
+### Minting a Portion at Deployment
+
+1. **Initial Minting**: In your `initialize` function, mint only a portion of the total supply (e.g., 25%). This initial minting could be to a specific wallet, a set of initial holders, or for liquidity purposes.
+
+   Example:
+   ```solidity
+   // Mint 25% of MAX_SUPPLY to the deployer or a specified address
+   uint256 initialSupply = MAX_SUPPLY / 4; // 25%
+   _mint(msg.sender, initialSupply);
+   ```
+
+2. **Allowance for Future Minting**: Since you're not minting the full supply initially, ensure that the `mint` function respects the `MAX_SUPPLY` limit for any future minting.
+
+### Distributing Rewards Tokens
+
+1. **Rewards Mechanism**: Implement a mechanism in your `LikesToken` contract to distribute rewards. This could be based on user interactions, staking, or other criteria.
+
+2. **Rewards Distribution Function**:
+   - Create a function to calculate and distribute rewards. This function can use the `mint` function to issue new tokens as rewards.
+   - Ensure that the distribution logic aligns with your tokenomics and is transparent to users.
+
+   Example:
+   ```solidity
+   function distributeRewards(address recipient, uint256 rewardAmount) public onlyRole(REWARDS_DISTRIBUTOR_ROLE) {
+       require(totalSupply() + rewardAmount <= MAX_SUPPLY, "Exceeds max supply");
+       _mint(recipient, rewardAmount);
+   }
+   ```
+
+3. **Role-Based Access Control**: Use role-based access control to manage who can distribute rewards. For instance, a `REWARDS_DISTRIBUTOR_ROLE` can be created and assigned to an account or set of accounts responsible for managing rewards.
+
+### Considerations
+
+- **Tokenomics and Governance**: Clearly define and document how tokens will be minted and distributed over time. If your project has a DAO or governance system, consider involving your community in these decisions.
+
+- **Testing and Security**: Thoroughly test these new functionalities, especially the rewards distribution logic, to ensure they work as intended and do not introduce security vulnerabilities.
+
+- **Transparency**: Keep your community informed about how tokens are minted and distributed, especially regarding rewards, as this impacts token value and user trust.
+
+- **Upgradeability**: If your contract is upgradeable, you can iteratively develop and improve your rewards mechanism based on user feedback and changing needs.
+
+By implementing these features, you will add a dynamic aspect to your token supply management and create incentives for user engagement or other desired behaviors within your ecosystem.
+
+Would you like more detailed implementation guidance or information on any specific aspect of this setup?
 Would you like to explore specific strategies for the initial design of your contract, or have other questions about smart contract development and upgradeability?

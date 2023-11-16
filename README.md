@@ -67,3 +67,117 @@ This `LikesToken` smart contract, leveraging OpenZeppelin's library and Chainlin
 The contract is quite robust, integrating several layers of functionalities and controls. The use of roles for governance and the integration with Chainlink for price data add significant depth to the contract's capabilities. The modular approach also offers flexibility in extending the contract's functionalities in the future.
 
 While the contract appears well-structured, remember the importance of thorough testing, especially given its complexity and the critical nature of its functionalities. Consider deploying it on a testnet and conducting extensive tests to ensure everything operates as intended and to identify any potential security vulnerabilities.
+
+
+---
+
+## Add DAO_ROLE and contract modifications to reflect the future updateable variables
+
+In Solidity, the smart contract language for Ethereum, you have access to a variety of data types that you can use for your variables. Here's a rundown of some of the most commonly used data types, including those you mentioned:
+
+### Primary Data Types
+
+1. **Boolean**: `bool` - Represents a true/false value. 
+   ```solidity
+   bool isActive;
+   ```
+
+2. **Integer**: 
+   - Unsigned Integers: `uint` / `uint256` (most commonly used due to its wide range). Represents non-negative integers.
+   - Signed Integers: `int` / `int256`. Represents both positive and negative integers.
+   ```solidity
+   uint256 balance;
+   int256 temperature;
+   ```
+
+3. **Address**: 
+   - `address`. Holds a 20-byte value (size of an Ethereum address). 
+   - `address payable`. Similar to `address`, but with added functionality to receive Ether.
+   ```solidity
+   address owner;
+   address payable recipient;
+   ```
+
+4. **Byte Arrays**: 
+   - Fixed-size byte arrays: `bytes1`, `bytes2`, ..., `bytes32`.
+   - Dynamically-sized byte array: `bytes`.
+   ```solidity
+   bytes32 hash;
+   bytes data;
+   ```
+
+5. **String**: Dynamically-sized UTF-8-encoded string.
+   ```solidity
+   string name;
+   ```
+
+### Complex Data Types
+
+1. **Arrays**: Can be fixed-size or dynamically-sized and can contain any type.
+   ```solidity
+   uint256[] dynamicArray;
+   uint256[10] fixedArray;
+   ```
+
+2. **Structs**: Custom-defined types that can group several variables.
+   ```solidity
+   struct User {
+       string name;
+       uint256 age;
+   }
+   ```
+
+3. **Mappings**: Key-value pairs, where keys are unique and values can be of any type.
+   ```solidity
+   mapping(address => uint256) balances;
+   ```
+
+4. **Enums**: User-defined types consisting of a set of named constants.
+   ```solidity
+   enum State { Active, Inactive }
+   ```
+
+### Special Data Types
+
+1. **Function**: A type for holding functions.
+   ```solidity
+   function (uint256) external returns (bool) func;
+   ```
+
+### Points to Remember
+- **Data Location**: Solidity has three data locations – `storage`, `memory`, and `calldata` – that determine where data is stored.
+- **Gas Cost**: Certain data types (like `bytes` and `string`) can be more costly in terms of gas, especially when their size is large or not fixed.
+- **Secure Practices**: Always choose the smallest data type suitable for your purpose to optimize contract efficiency. For example, if a variable will never exceed a certain value, consider `uint8` or `uint16` instead of `uint256`.
+
+These data types can be combined and used in various ways to create complex data structures, fitting the needs of this smart contract.
+
+Inheriting from OpenZeppelin's `upgradeable-core` contracts does provide a framework for creating upgradeable contracts, but it doesn't automatically future-proof your contract against all potential changes, especially when it comes to adding new state variables or manipulating data types.
+
+Here’s how it works and what you need to consider:
+
+### Future Proofing State Variables in Upgradeable Contracts
+
+1. **Adding New Variables**: When using upgradeable contracts, you can add new state variables in future versions. However, these new variables should be added at the end of the contract to maintain the storage layout. You cannot insert new variables in between existing ones.
+
+2. **Modifying Existing Variables**: You should avoid changing the data type of existing state variables. If a variable was declared as `uint256`, it should remain `uint256` in all future versions of the contract.
+
+3. **Initial State Variables**: The state variables declared in the initial version of your contract (the one you first deploy as a proxy) set the foundation. It’s crucial to carefully plan these initial variables, considering possible future needs.
+
+4. **Use of Structs and Arrays**: Be cautious with structs and arrays. While you can add new elements to the end of a struct or array, modifying or removing existing elements can disrupt the storage layout.
+
+### How OpenZeppelin Upgradeable Contracts Help
+
+- **Initializers Over Constructors**: OpenZeppelin upgradeable contracts use initializer functions instead of constructors. This approach is crucial for setting up state in a proxy pattern.
+- **Consistency Checks**: The OpenZeppelin upgrades plugin for development tools like Hardhat and Truffle can help identify storage layout changes that could cause issues.
+
+### Best Practices for Future Compatibility
+
+1. **Careful Initial Design**: Spend time on the initial design of your contract, considering potential future expansions.
+2. **Reserve Space**: Some developers reserve space in their contracts by including state variables like `uint256[50] private __gap;` that can be replaced in future versions.
+3. **Modular Design**: Keep your contract logic modular, separating concerns and functionalities as much as possible.
+
+### Conclusion
+
+While inheriting from OpenZeppelin’s upgradeable contracts provides a solid foundation for upgradeability, it doesn’t remove the need for careful planning regarding state variables and contract architecture. Future-proofing an upgradeable contract involves thoughtful initial design and adherence to best practices in contract upgradeability.
+
+Would you like to explore specific strategies for the initial design of your contract, or have other questions about smart contract development and upgradeability?

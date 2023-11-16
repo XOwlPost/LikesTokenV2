@@ -1,6 +1,11 @@
-require("@nomiclabs/hardhat-waffle");
-require("@nomiclabs/hardhat-ethers");
-require('dotenv').config();
+require("@nomiclabs/hardhat-waffle");  // For testing
+require("@nomiclabs/hardhat-etherscan"); // For etherscan verification
+require("@nomiclabs/hardhat-ethers"); // For ethers.js
+require('dotenv').config(); // For .env file
+require('@openzeppelin/hardhat-upgrades'); // For upgradeable contracts
+
+console.log(process.env.SEPOLIA_PRIVATE_KEY); // Sepolia private key
+console.log(process.env.SEPOLIA_RPC_URL); // Sepolia RPC URL
 
 const SEPOLIA_PRIVATE_KEY = process.env.SEPOLIA_PRIVATE_KEY;
 const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL;

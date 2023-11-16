@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-// Importing statements for OpenZeppelin's ERC20 standards, utilities and other dependencies
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+// Importing statements for OpenZeppelin's ERC20 standards, utilities and other dependencies as upgrades
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/upgrades-core/contracts/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
     // Interface for modular functionality, enabling external modules to execute specific actions
 interface IModule {
@@ -18,17 +18,23 @@ interface IModule {
 }
 
 // Using directive for SafeERC20
-using SafeERC20 for IERC20;
+using SafeERC20Upgradeable for IERC20Upgradeable;
 
 // Contract declaration
 // The LikesToken contract, inheriting from various OpenZeppelin contracts for standard ERC20 functionality,
 // burnability, pause capability, access control, and reentrancy protection
-contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessControl, Ownable {
+contract LikesToken is Initializable, ReentrancyGuardUpgradeable, ERC20Upgradeable, ERC20BurnableUpgradeable, PausableUpgradeable, AccessControlUpgradeable, OwnableUpgradeable {
 
-        // Constructor for initializing the token with specific attributes and airdrop details
-    constructor(address[] memory _recipients, uint256[] memory _amounts) 
-    ERC20("LikesToken", "LTXO") 
-    {
+
+        // Initializer for initializing the token with specific attributes TokenName and TokenTicker
+    function initialize(address[] memory _recipients, uint256[] memory _amounts) public initializer {
+        __Context_init_unchained();
+        __ERC20_init_unchained("LikesToken", "LTXO");
+        __ERC20Burnable_init_unchained();
+        __Pausable_init_unchained();
+        __AccessControl_init_unchained();
+        __Ownable_init_unchained();
+        __ReentrancyGuard_init_unchained();
 
     // Defining role constants for access control
     bytes32 public constant GNOSIS_SAFE_ROLE = keccak256(abi.encodePacked("GNOSIS_SAFE_ROLE"));
@@ -36,12 +42,14 @@ contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessCo
     bytes32 public constant AIRDROPPER_ROLE = keccak256("AIRDROPPER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant MODULE_ADMIN_ROLE = keccak256("MODULE_ADMIN_ROLE");
+    bytes32 public constant DAO_ROLE = keccak256("DAO_ROLE");
 
     // Variables related to price feed and token economics
     AggregatorV3Interface internal priceFeedETHUSD;
-    uint256 public tokenPrice;
-    uint256 public lastUpdated;
-    uint256 private constant MAX_SUPPLY = 2006000000 * 10**18;
+    uint256 public tokenPrice; // Price of the token in USD
+    uint256 public lastUpdated; // Timestamp of the last price update
+    uint256 private constant MAX_SUPPLY = 2006000000 * 10**18; // Maximum supply of the token with 18 decimals
+    uint256[50] private __gap; // Reserved storage space to allow for upgrades in the future
 
     // Mappings for airdrop recipients and allowed modules
     mapping(address => uint256) public airdropRecipients;
@@ -50,6 +58,50 @@ contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessCo
     // Events for logging changes and actions
     event PriceUpdated(uint256 newRate);
     event TokensAirdropped(address recipient, uint256 amount);
+    event EtherReceived(address indexed sender, uint256 amount);
+    event ModuleAdded(address indexed module);
+    event ModuleRemoved(address indexed module);
+    event EtherWithdrawn(address indexed recipient, uint256 amount);
+    event ERC20TokensWithdrawn(address indexed recipient, uint256 amount);
+    event TokensReceived(address indexed token, address indexed sender, uint256 amount);
+    event TokensTransferred(address indexed token, address indexed recipient, uint256 amount);
+    event ModuleExecuted(address indexed module, address indexed target, uint256 value, bytes data);
+    event ModuleExecutionFailed(address indexed module, address indexed target, uint256 value, bytes data);
+    event ModuleApproved(address indexed module);
+    event ModuleRevoked(address indexed module);
+    event ModulePermissionsSet(address indexed module, bool canExecute);
+    event ModulePermissionsRevoked(address indexed module);
+    event ModulePermissionsRevokedForAll(bool canExecute);
+    event ModulePermissionsSetForAll(bool canExecute);
+    event ModulePermissionsSetForAllForAll(bool canExecute);
+    event UpgradeInitiated(address indexed implementation, uint256 timestamp);
+    event UpgradeFinalized(address indexed implementation);
+    event UpgradeCanceled(address indexed implementation);
+
+    // Struct to keep track of airdrop recipients and amounts
+    ERC20Upgradeable.__ERC20_init("LikesToken", "LTXO") 
+    {
+
+    // Defining role constants for access control
+    bytes32 public constant GNOSIS_SAFE_ROLE = keccak256(abi.encodePacked("GNOSIS_SAFE_ROLE"));
+    bytes32 public constant PRICE_UPDATER_ROLE = keccak256("PRICE_UPDATER_ROLE");
+    bytes32 public constant AIRDROPPER_ROLE = keccak256("AIRDROPPER_ROLE");
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant MODULE_ADMIN_ROLE = keccak256("MODULE_ADMIN_ROLE");
+    bytes32 public constant DAO_ROLE = keccak256("DAO_ROLE");
+
+    // Variables related to price feed and token economics
+    AggregatorV3Interface internal priceFeedETHUSD;
+    uint256 public tokenPrice;
+    uint256 public lastUpdated;
+    uint256 private constant MAX_SUPPLY = 2006000000 * 10**18;
+
+    // Variables related to future upgrades
+    address public implementation;
+    address public pendingImplementation;
+    uint256 public constant UPGRADE_DELAY = 2 days;
+    uint256 public upgradeTimestamp;
+
 
     // Struct to keep track of airdrop recipients and amounts
     struct AirdropRecipient {
@@ -69,7 +121,7 @@ contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessCo
 
         // Check for matching lengths in recipients and amounts arrays
         require(_recipients.length == _amounts.length, "Arrays must be of equal length");
-        
+
         // Setting Gnosis Safe address
         gnosisSafe = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
@@ -85,6 +137,7 @@ contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessCo
     // Minting tokens to Gnosis Safe directly
     _mint(gnosisSafe, 2006000000 * 10**decimals());
 
+    // Setting initial token price and last updated timestamp
     lastUpdated = block.timestamp;
     priceFeedETHUSD = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
     updatePrice();
@@ -114,19 +167,25 @@ contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessCo
     _grantRole(DAO_ROLE, msg.sender);
     }
 
+    // Overriding the _mint function to add a check for the maximum supply
+    // This prevents the minting of tokens beyond the maximum supply
     function _mint(address account, uint256 amount) internal override {
         require(account != address(0), "ERC20: mint to the zero address");
         require(totalSupply() + amount <= MAX_SUPPLY, "Exceeds max supply");
         super._mint(account, amount);
     }
 
-    function getLatestETHPriceInUSD() public view returns (uint256) {
+    // Function to get the latest ETH/USD price from Chainlink
+    // This is used to calculate the token price in USD
+    function getLatestETHPriceInUSD() public view returns (uint256) external {
         (, int ethUsdPrice,,,) = priceFeedETHUSD.latestRoundData();
         require(ethUsdPrice > 0, "Invalid price data");
         return uint256(ethUsdPrice);
     }
 
-    function updatePrice() public onlyRole(PRICE_UPDATER_ROLE) {
+    // Function to update the token price
+    // This can only be called once a day
+        function updatePrice() public onlyRole(PRICE_UPDATER_ROLE) nonReentrant {
         require(block.timestamp - lastUpdated > 1 days, "Can only update once a day");
         lastUpdated = block.timestamp;
         uint256 latestPrice = getLatestETHPriceInUSD();  // Get latest ETH/USD price from Chainlink
@@ -134,16 +193,21 @@ contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessCo
         emit PriceUpdated(tokenPrice);
     }
 
+    // Function to purchase tokens
+    // This function is payable and can only be called when the contract is not paused
     function purchaseTokens(uint256 numberOfTokens) public payable whenNotPaused nonReentrant {
         require(msg.value == numberOfTokens * tokenPrice, "Amount not correct");
         require(balanceOf(address(this)) >= numberOfTokens, "Not enough tokens left for sale");
         _transfer(address(this), msg.sender, numberOfTokens);
     }
 
-    function setTokenPrice(uint256 newPrice) public onlyRole(PRICE_UPDATER_ROLE) {
-        tokenPrice = newPrice;
+    // Function to mint new tokens
+    // This function can only be called by the MINTER_ROLE
+    function mint(address recipient, uint256 amount) public onlyRole(MINTER_ROLE) nonReentrant {
+        _mint(recipient, amount);
     }
 
+    // Function to pause the contract
     function pause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _pause();
     }
@@ -200,7 +264,7 @@ contract LikesToken is ReentrancyGuard, ERC20, ERC20Burnable, Pausable, AccessCo
 
     event EtherReceived(address indexed sender, uint256 amount);
         receive() external payable {
-    
+
         emit EtherReceived(msg.sender, msg.value);
     }
 

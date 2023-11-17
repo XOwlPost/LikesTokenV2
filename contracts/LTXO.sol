@@ -12,19 +12,11 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-
-    // Interface for modular functionality, enabling external modules per IModule interface to execute specific actions
+    // Interface for modular functionality, enabling external modules to execute specific actions
 interface IModule {
     function execute(address target, uint256 value, bytes calldata data) external returns (bool, bytes memory);
     event ModuleAdded(address indexed module);
 }
-
-
-    // Interface for modular functionality, enabling external modules to execute actions per HIModulehook interface
-    interface IModuleHook {
-    function executeHook(address target, bytes calldata data) external returns (bool, bytes memory);
-}
-
 
 // Using directive for SafeERC20
 using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -33,7 +25,7 @@ using SafeERC20Upgradeable for IERC20Upgradeable;
 // The LikesToken contract, inheriting from various OpenZeppelin contracts for standard ERC20 functionality,
 // burnability, pause capability, access control, reentrancy protection and upgradability
 contract LikesToken is Initializable, ReentrancyGuardUpgradeable, ERC20Upgradeable, ERC20BurnableUpgradeable, PausableUpgradeable, AccessControlUpgradeable, OwnableUpgradeable {
-    address public moduleHookAddress;
+
 
         // Initializer for initializing the token with specific attributes TokenName and TokenTicker
     function initialize(address[] memory _recipients, uint256[] memory _amounts) public initializer {
@@ -45,26 +37,7 @@ contract LikesToken is Initializable, ReentrancyGuardUpgradeable, ERC20Upgradeab
         __Ownable_init_unchained();
         __ReentrancyGuard_init_unchained();
         emit OwnershipTransferred(address(0), msg.sender);
-
-        // Function to set a module per Hook
-function setModuleHookAddress(address _moduleHookAddress) external onlyOwner {
-    require(_moduleHookAddress != address(0), "Invalid hook address");
-    moduleHookAddress = _moduleHookAddress;
-}
-
-// Function that checks if the hook is set and if so delegates calls to the module implementing this hook
-// This function will be the entrypoint to interact with future modules
-// This function can only be called by the GNOSIS_SAFE_ROLE
-function executeHook(bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) {
-    if (moduleHookAddress != address(0)) {
-        require(IModuleHook(moduleHookAddress).executeHook(msg.sender, data), "Hook execution failed");
-    }
-    // Additional code can go here if needed
-}
-
-    // Additional code can go here if needed
-}
-
+        
     // Defining role constants for access control
     bytes32 public constant GNOSIS_SAFE_ROLE = keccak256(abi.encodePacked("GNOSIS_SAFE_ROLE"));
     bytes32 public constant PRICE_UPDATER_ROLE = keccak256("PRICE_UPDATER_ROLE");
@@ -110,6 +83,8 @@ function executeHook(bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) {
     bytes32 public constant MINTER_ROLE = keccak256(abi.encodePacked("MINTER_ROLE");
     bytes32 public constant MODULE_ADMIN_ROLE = keccak256(abi.encodePacked("MODULE_ADMIN_ROLE");
     bytes32 public constant DAO_ROLE = keccak256(abi.encodePacked("DAO_ROLE");
+    bytes32 public constant REWARDS_DISTRIBUTOR_ROLE = keccak256(abi.encodePacked("REWARDS_DISTRIBUTOR_ROLE");
+    
 
     // Variables related to price feed and token economics
     AggregatorV3Interface internal priceFeedETHUSD;
@@ -196,12 +171,14 @@ function executeHook(bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) {
     // Granting the DAO_ROLE to the message sender.
     // This role is responsible for managing the DAO, including voting and governance.
     _grantRole(DAO_ROLE, msg.sender)onlyGnosisSafe nonReentrant {
+        require(msg.sender == gnosisSafe, "Not authorized");
         emit RoleGranted(DAO_ROLE, msg.sender, msg.sender);
     }
 
     // Granting the REWARDS_DISTRIBUTOR_ROLE to the message sender.
     // This role is responsible for distributing rewards to users.
     _grantRole(REWARDS_DISTRIBUTOR_ROLE, msg.sender) onlyGnosisSafe nonReentrant {
+        require(msg.sender == gnosisSafe, "Not authorized");
         emit RoleGranted(REWARDS_DISTRIBUTOR_ROLE, msg.sender, msg.sender);
     }
 

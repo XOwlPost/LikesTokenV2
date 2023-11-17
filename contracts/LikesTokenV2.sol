@@ -35,6 +35,7 @@ contract LikesToken is Initializable, ReentrancyGuardUpgradeable, ERC20Upgradeab
         __AccessControl_init_unchained();
         __Ownable_init_unchained();
         __ReentrancyGuard_init_unchained();
+        emit OwnershipTransferred(address(0), msg.sender);
 
     // Defining role constants for access control
     bytes32 public constant GNOSIS_SAFE_ROLE = keccak256(abi.encodePacked("GNOSIS_SAFE_ROLE"));
@@ -447,6 +448,16 @@ super._mint(account, amount);
 
         emit EtherReceived(msg.sender, msg.value);
     }
+
+// Function to withdraw Ether from the contract
+// This function can only be called by the Gnosis Safe
+function withdrawFunds() public onlyGnosisSafe nonReentrant {
+    uint256 balance = address(this).balance;
+    require(balance > 0, "No funds to withdraw");
+    payable(owner()).transfer(balance);
+    emit EtherWithdrawn(owner(), balance);
+}
+
 
     // Function to execute a module
     // This function can only be called by the Gnosis Safe

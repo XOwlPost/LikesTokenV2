@@ -12,19 +12,11 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-
-    // Interface for modular functionality, enabling external modules per IModule interface to execute specific actions
+    // Interface for modular functionality, enabling external modules to execute specific actions
 interface IModule {
     function execute(address target, uint256 value, bytes calldata data) external returns (bool, bytes memory);
     event ModuleAdded(address indexed module);
 }
-
-
-    // Interface for modular functionality, enabling external modules to execute actions per HIModulehook interface
-    interface IModuleHook {
-    function executeHook(address target, bytes calldata data) external returns (bool, bytes memory);
-}
-
 
 // Using directive for SafeERC20
 using SafeERC20Upgradeable for IERC20Upgradeable;
@@ -33,7 +25,7 @@ using SafeERC20Upgradeable for IERC20Upgradeable;
 // The LikesToken contract, inheriting from various OpenZeppelin contracts for standard ERC20 functionality,
 // burnability, pause capability, access control, reentrancy protection and upgradability
 contract LikesToken is Initializable, ReentrancyGuardUpgradeable, ERC20Upgradeable, ERC20BurnableUpgradeable, PausableUpgradeable, AccessControlUpgradeable, OwnableUpgradeable {
-    address public moduleHookAddress;
+
 
         // Initializer for initializing the token with specific attributes TokenName and TokenTicker
     function initialize(address[] memory _recipients, uint256[] memory _amounts) public initializer {
@@ -45,26 +37,7 @@ contract LikesToken is Initializable, ReentrancyGuardUpgradeable, ERC20Upgradeab
         __Ownable_init_unchained();
         __ReentrancyGuard_init_unchained();
         emit OwnershipTransferred(address(0), msg.sender);
-
-        // Function to set a module per Hook
-function setModuleHookAddress(address _moduleHookAddress) external onlyOwner {
-    require(_moduleHookAddress != address(0), "Invalid hook address");
-    moduleHookAddress = _moduleHookAddress;
-}
-
-// Function that checks if the hook is set and if so delegates calls to the module implementing this hook
-// This function will be the entrypoint to interact with future modules
-// This function can only be called by the GNOSIS_SAFE_ROLE
-function executeHook(bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) {
-    if (moduleHookAddress != address(0)) {
-        require(IModuleHook(moduleHookAddress).executeHook(msg.sender, data), "Hook execution failed");
-    }
-    // Additional code can go here if needed
-}
-
-    // Additional code can go here if needed
-}
-
+        
     // Defining role constants for access control
     bytes32 public constant GNOSIS_SAFE_ROLE = keccak256(abi.encodePacked("GNOSIS_SAFE_ROLE"));
     bytes32 public constant PRICE_UPDATER_ROLE = keccak256("PRICE_UPDATER_ROLE");
@@ -378,3 +351,187 @@ emit TokensMinted(account, amount);
     emit ModuleExecuted(module, target, value, data);
     }
 }
+
+When designing a modular smart contract architecture, especially for a token system like `LikesToken (LTXO.sol)`, choosing the right modules is essential for both functionality and security. 
+For seperation of concerns the LikesToken contract is divided in modules: `TokenManager.sol`, `ModuleManager.sol`, and the main contract `LTXO.sol`. Let's explore the roles and benefits of these modules:
+
+### 1. **LTXO.sol (Main Contract)**
+- **Role**: Serves as the core contract of your token system, handling the primary logic and state of your ERC20 token.
+- **Key Responsibilities**:
+  - Token minting, burning, transfers, and balance tracking.
+  - Integrating with external modules for extended functionalities.
+  - Managing roles and permissions (access control).
+- **Security Considerations**: As the central contract, it must be robust against common vulnerabilities (e.g., reentrancy, overflow/underflow, etc.) and facilitate secure interactions with modules.
+
+### 2. **TokenManager.sol**
+- **Role**: Manages specific token-related operations that may need to be updated or modified separately from the main contract.
+- **Key Responsibilities**:
+  - Implementing tokenomics mechanisms (e.g., dynamic supply adjustments, staking rewards).
+  - Handling complex token transfer logic (e.g., transfer fees, whitelist/blacklist management).
+  - Integrating with DeFi protocols or other external systems.
+- **Benefits**: Separating these concerns from the main contract can simplify updates and reduce the risk of introducing bugs into the core logic.
+
+### 3. **ModuleManager.sol**
+- **Role**: Manages the addition, removal, and interaction of various modules in the ecosystem.
+- **Key Responsibilities**:
+  - Registering and deregistering modules.
+  - Routing calls to the appropriate module and handling permissions.
+  - Ensuring module compatibility and safe interactions.
+- **Benefits**: Provides flexibility in extending the contract's functionality over time without needing to upgrade the core contract. Also, it helps in maintaining a clean and organized codebase.
+
+### Integration Strategy:
+- **Upgradability**: Utilize proxy patterns (e.g., OpenZeppelin's `TransparentUpgradeableProxy`) to allow for future upgrades without losing state.
+- **Inter-Module Communication**: Ensure modules can communicate efficiently and securely, with well-defined interfaces and access controls.
+- **Testing and Auditing**: Each module, along with the main contract, should be thoroughly tested and audited, especially at the integration points.
+
+### Conclusion:
+This modular approach offers flexibility, easier maintenance, and the potential for future expansion of the `LikesToken` ecosystem. 
+However, it's crucial to manage the complexity that comes with multiple interacting contracts. Carefully designing the architecture and continuously monitoring 
+for security vulnerabilities in each module are vital steps for the success of your token system.
+
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+// Importing necessary components from OpenZeppelin, including ERC20 standards and security utilities
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+... // Other imports
+
+// Interface definition for external modules
+interface IModule {
+    // Define what an external module can execute
+    function execute(address target, uint256 value, bytes calldata data) external returns (bool, bytes memory);
+    // Event to log when a new module is added
+    event ModuleAdded(address indexed module);
+}
+
+// Using directive for SafeERC20, ensuring safe interactions with ERC20 tokens
+using SafeERC20Upgradeable for IERC20Upgradeable;
+
+// Contract declaration for LikesToken
+// Inherits from multiple OpenZeppelin contracts for ERC20, burnability, pausability, access control, etc.
+contract LikesToken is Initializable, ReentrancyGuardUpgradeable, ERC20Upgradeable, ... {
+
+    // Initialize function for setting up the contract during deployment
+    function initialize(address[] memory _recipients, uint256[] memory _amounts) public initializer {
+        // Basic initializations for various functionalities like ERC20, Pausable, etc.
+        __Context_init_unchained();
+        __ERC20_init_unchained("LikesToken", "LTXO");
+        ... // Other initializations
+
+        // Emit an event indicating the ownership transfer (common pattern in Ownable contracts)
+        emit OwnershipTransferred(address(0), msg.sender);
+
+        // Defining roles for access control
+        bytes32 public constant GNOSIS_SAFE_ROLE = keccak256(abi.encodePacked("GNOSIS_SAFE_ROLE"));
+        ... // Other roles
+
+        // Set up for price feed and economic variables
+        AggregatorV3Interface internal priceFeedETHUSD;
+        uint256 public tokenPrice;
+        ... // Other related variables
+
+        // Mappings for tracking airdrop recipients and allowed modules
+        mapping(address => uint256) public airdropRecipients;
+        mapping(address => bool) public allowedModules;
+
+        // Event definitions for logging various activities in the contract
+        event ModuleExecuted(...);
+        ... // Other events
+
+        // Struct and array for managing airdrop recipients
+        struct AirdropRecipient { ... }
+        AirdropRecipient[] public airdropList;
+        address public gnosisSafe;
+
+        // Modifier to restrict function access to only the Gnosis Safe
+        modifier onlyGnosisSafe() { ... }
+
+        // Validating input arrays for airdrops
+        require(_recipients.length == _amounts.length, "Arrays must be of equal length");
+
+        ... // Logic for populating airdrop list and setting initial states
+
+        // Important: Granting roles to appropriate entities
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender) onlyGnosisSafe nonReentrant { ... }
+        ... // Other role grants
+
+        // Minting initial supply as a fraction of MAX_SUPPLY for liquidity and sales
+        uint256 initialSupply = MAX_SUPPLY / 4; // 25%
+        _mint(msg.sender, initialSupply);
+        require(totalSupply() + amount <= MAX_SUPPLY, "Exceeds max supply");
+        ... // Mint event emission
+
+        // Overriding the _mint function to enforce maximum supply cap
+        function _mint(address account, uint256 amount) internal override {
+            require(account != address(0), "ERC20: mint to the zero address");
+            require(totalSupply() + amount <= MAX_SUPPLY, "Exceeds max supply");
+            super._mint(account, amount);
+            emit TokensMinted(account, amount);
+        }
+
+        ... // Other functions like getLatestETHPriceInUSD, updatePrice, etc.
+
+        // Function to allow token purchase, considering the contract's paused state and reentrancy attacks
+        function purchaseTokens(uint256 numberOfTokens) public payable whenNotPaused nonReentrant { ... }
+
+        ... // Functions for rewards distribution, token burning, pausing/unpausing the contract
+
+        // Airdrop-related functions, ensuring proper authorization and input validation
+        function airdropTokens(address[] memory recipients) external onlyRole(AIRDROPPER_ROLE) nonReentrant { ... }
+        ... // Other airdrop functions
+
+        // Receive function for handling incoming Ether transactions
+        receive() external payable { ... }
+
+        // Function to safely withdraw funds, ensuring only authorized access and proper execution
+        function withdrawFunds() external onlyGnosisSafe nonReentrant {
+            uint256 balance = address(this).balance;
+            require(balance > 0, "No funds to withdraw");
+            (bool success, ) = payable(owner()).call{value: balance}("");
+            require(success, "Transfer failed");
+            emit EtherWithdrawn(owner(), balance);
+        }
+
+        ... // Functions for ERC20 token handling and module management
+
+        // Execute function for modules, ensuring authorized access and module validation
+        function executeModule(address module, address target, uint256 value, bytes calldata data) external onlyGnosisSafe { ... }
+}
+
+// Aligning module names with the roles they manage can be a strategic approach to ensure clarity and consistency in your smart contract architecture. This approach makes it easier to understand the responsibilities of each module based on its associated role. 
+// For example, the `TokenEconomicsManager` module is responsible for managing the economic aspects of the token, like minting rules, tokenomics, and supply mechanisms.
+// Compare this snippet from contracts/3-AirdropManager.sol:
+
+1.GnosisSafeManager.sol for GNOSIS_SAFE_ROLE
+// Manages operations specific to the Gnosis Safe, typically related to multisig wallet interactions.
+
+2.PriceUpdater.sol for PRICE_UPDATER_ROLE
+// Handles updates to the token price, likely interacting with external price feeds or oracles.
+
+3.AirdropManager.sol for AIRDROPPER_ROLE
+// Manages the distribution of tokens through airdrops, including scheduling, recipient management, and execution.
+
+4.TokenMinter.sol for MINTER_ROLE
+// Deals with token minting processes, including supply control and adherence to tokenomics policies.
+
+5.ModuleAdministrator.sol for MODULE_ADMIN_ROLE
+// Responsible for adding, removing, or updating modules within the system, handling the modular architecture's integrity.
+
+6.DAOManager.sol the Governance Module for DAO_ROLE
+// Manages decentralized governance processes, such as proposals, voting, and execution of community decisions.
+
+7.RewardsDistributor.sol for REWARDS_DISTRIBUTOR_ROLE
+// Manages the distribution of rewards, which could include staking rewards, liquidity mining incentives, or other reward mechanisms.
+
+8.
+
+
+// Benefits of This Approach
+Role Clarity: Each module's purpose directly aligns with a specific role, making it easier to understand its responsibilities.
+Modularity: Facilitates clear boundaries between different areas of functionality, aiding in maintenance and updates.
+Security: By separating concerns, each module can be secured according to its specific risk profile and operational requirements.
+Considerations
+Interdependence: Understand how these modules interact with each other and ensure they do so securely, particularly in permissioned actions.
+Documentation: Clearly document the role and functionalities of each module for developers and auditors to understand the system architecture easily.
+Flexibility: Be open to the possibility that a single module might need to handle multiple roles if they are closely related or if it simplifies the architecture without compromising security.
+Using role-based module names is a solid approach, especially for a system with well-defined roles and responsibilities. It enhances the readability and manageability of your smart contract codebase.

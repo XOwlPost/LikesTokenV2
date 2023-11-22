@@ -45,6 +45,7 @@ contract LikesToken is Initializable, ReentrancyGuardUpgradeable, ERC20Upgradeab
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant MODULE_ADMIN_ROLE = keccak256("MODULE_ADMIN_ROLE");
     bytes32 public constant DAO_ROLE = keccak256("DAO_ROLE");
+    bytes32 public constant REWARDS_DISTRIBUTOR_ROLE = keccak256("REWARDS_DISTRIBUTOR_ROLE");
 
     // Variables related to price feed and token economics
     AggregatorV3Interface internal priceFeedETHUSD;

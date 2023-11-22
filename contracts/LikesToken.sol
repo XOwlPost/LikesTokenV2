@@ -14,7 +14,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 
     // Interface for modular functionality, enabling external modules per IModule interface to execute specific actions
-interface IModule {
+    interface IModule {
     function execute(address target, uint256 value, bytes calldata data) external returns (bool, bytes memory);
     event ModuleAdded(address indexed module);
 }
@@ -46,22 +46,21 @@ contract LikesToken is Initializable, ReentrancyGuardUpgradeable, ERC20Upgradeab
         __ReentrancyGuard_init_unchained();
         emit OwnershipTransferred(address(0), msg.sender);
 
-        // Function to set a module per Hook
+// Function to set a module per Hook
 function setModuleHookAddress(address _moduleHookAddress) external onlyOwner {
     require(_moduleHookAddress != address(0), "Invalid hook address");
     moduleHookAddress = _moduleHookAddress;
 }
 
+// Function to Execute the Hook
 // Function that checks if the hook is set and if so delegates calls to the module implementing this hook
 // This function will be the entrypoint to interact with future modules
 // This function can only be called by the GNOSIS_SAFE_ROLE
 function executeHook(bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) {
     if (moduleHookAddress != address(0)) {
         require(IModuleHook(moduleHookAddress).executeHook(msg.sender, data), "Hook execution failed");
+        event HookExecuted(moduleHookAddress, msg.sender, data);
     }
-    // Additional code can go here if needed
-}
-
     // Additional code can go here if needed
 }
 
@@ -72,6 +71,7 @@ function executeHook(bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant MODULE_ADMIN_ROLE = keccak256("MODULE_ADMIN_ROLE");
     bytes32 public constant DAO_ROLE = keccak256("DAO_ROLE");
+    bytes32 public constant REWARDS_DISTRIBUTOR_ROLE = keccak256("REWARDS_DISTRIBUTOR_ROLE");
 
     // Variables related to price feed and token economics
     AggregatorV3Interface internal priceFeedETHUSD;
@@ -98,6 +98,14 @@ function executeHook(bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) {
     event Unpaused(address account);
     event TokensMinted(address indexed recipient, uint256 amount);
     event TokensBurned(address indexed recipient, uint256 amount);
+    event RewardsDistributed(address indexed sender, address indexed recipient, uint256 amount);
+    event AirdropRecipientMarked(address indexed recipient);
+    event AirdropListReset();
+    event ModuleAdded(address indexed module);
+    event ModuleRemoved(address indexed module);
+    event HookExecuted(address indexed module, address indexed target, bytes data);
+    event TokensPurchased(address indexed recipient, uint256 amount);
+    
 
     // Struct to keep track of airdrop recipients and amounts
     ERC20Upgradeable.__ERC20_init("LikesToken", "LTXO") 
@@ -110,6 +118,7 @@ function executeHook(bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) {
     bytes32 public constant MINTER_ROLE = keccak256(abi.encodePacked("MINTER_ROLE");
     bytes32 public constant MODULE_ADMIN_ROLE = keccak256(abi.encodePacked("MODULE_ADMIN_ROLE");
     bytes32 public constant DAO_ROLE = keccak256(abi.encodePacked("DAO_ROLE");
+    bytes32 public constant REWARDS_DISTRIBUTOR_ROLE = keccak256(abi.encodePacked("REWARDS_DISTRIBUTOR_ROLE");
 
     // Variables related to price feed and token economics
     AggregatorV3Interface internal priceFeedETHUSD;
@@ -119,6 +128,7 @@ function executeHook(bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) {
 
     // Variables related to future upgrades
     uint256[50] private __gap; // Reserved storage space to allow for upgrades in the future
+    address public moduleHookAddress;
 
     // Struct to keep track of airdrop recipients and amounts
     struct AirdropRecipient {
@@ -224,7 +234,7 @@ emit TokensMinted(account, amount);
     }
 
     // Function to get the latest ETH/USD price from Chainlink
-    // This is used to calculate the token price in USD
+    // This is used to calculate the token price in Gwei
     function getLatestETHPriceInUSD() public view returns (uint256) external {
         (, int ethUsdPrice,,,) = priceFeedETHUSD.latestRoundData();
         require(ethUsdPrice > 0, "Invalid price data");
@@ -232,7 +242,7 @@ emit TokensMinted(account, amount);
     }
 
     // Function to update the token price
-    // This can only be called once a day
+    // This can only be called once a day by the PRICE_UPDATER_ROLE
         function updatePrice() public onlyRole(PRICE_UPDATER_ROLE) nonReentrant {
         require(block.timestamp - lastUpdated > 1 days, "Can only update once a day");
         lastUpdated = block.timestamp;
@@ -354,7 +364,7 @@ emit TokensMinted(account, amount);
         }
     }
 
-    // Function to airdrop tokens to a list of recipients
+    // Function to add airdrop recipients to a list in batches of max 100
     // This function can only be called by the AIRDROPPER_ROLE
     function addAirdropRecipients(address[] memory _recipients, uint256[] memory _amounts) external onlyRole(AIRDROPPER_ROLE) nonReentrant {
         require(_recipients.length == _amounts.length, "Arrays must be of equal length");
@@ -366,8 +376,26 @@ emit TokensMinted(account, amount);
                 amount: _amounts[i]
             });
             airdropList.push(newRecipient);
-        }
         emit AirdropRecipientsAdded(_recipients, _amounts);
+        }
+    }
+
+    // Function to mark recipients who have already received their airdrop
+    // This function can only be called by the AIRDROPPER_ROLE
+    function markAirdropRecipients(address[] memory recipients) external onlyRole(AIRDROPPER_ROLE) nonReentrant {
+        for (uint256 i = 0; i < recipients.length; i++) {
+            airdropRecipients[recipients[i]] = 0;
+            event AirdropRecipientMarked(recipients[i]);
+        emit AirdropRecipientsAdded(_recipients, _amounts);
+        }
+    }
+
+    // Function to manual reset the airdrop recipient list clearing all recipients and marking them as not airdropped
+    // This function can only be called by the AIRDROPPER_ROLE
+    function resetAirdropList() external onlyRole(AIRDROPPER_ROLE) nonReentrant {
+        delete airdropList;
+            airdropList = new AirdropRecipient[](0);
+            event AirdropListReset();
     }
 
     // Function to execute a module
@@ -378,3 +406,24 @@ emit TokensMinted(account, amount);
     emit ModuleExecuted(module, target, value, data);
     }
 }
+
+    // Function to execute a hook 
+    // This function can only be called by the Gnosis Safe
+    function executeHook(bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) {
+    require(moduleHookAddress != address(0), "Module hook address is not set");
+    require(IModuleHook(moduleHookAddress).executeHook(msg.sender, data), "Hook execution failed");
+
+    // Emit an event for successful hook execution
+    emit HookExecuted(moduleHookAddress, msg.sender, data);
+
+    // Function to set a module hook address and add it to the allowed modules
+    // This function can only be called by the Gnosis Safe
+    function setModuleHookAddress(address _moduleHookAddress) external onlyGnosisSafe {
+    require(_moduleHookAddress != address(0), "Invalid hook address");
+    address oldAddress = moduleHookAddress;
+    moduleHookAddress = _moduleHookAddress;
+    allowedModules[_moduleHookAddress] = true; // Adding to allowed modules
+    // Emit an event for successful setting a module hook address
+    emit ModuleHookAddressUpdated(oldAddress, _moduleHookAddress);
+}
+    

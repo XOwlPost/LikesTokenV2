@@ -206,13 +206,15 @@ function executeHook(bytes calldata data) external onlyRole(GNOSIS_SAFE_ROLE) {
     // Granting the DAO_ROLE to the message sender.
     // This role is responsible for managing the DAO, including voting and governance.
     _grantRole(DAO_ROLE, msg.sender)onlyGnosisSafe nonReentrant {
-        emit RoleGranted(DAO_ROLE, msg.sender, msg.sender);
+    require(msg.sender == gnosisSafe, "Not authorized");
+    emit RoleGranted(DAO_ROLE, msg.sender, msg.sender);
     }
 
     // Granting the REWARDS_DISTRIBUTOR_ROLE to the message sender.
     // This role is responsible for distributing rewards to users.
     _grantRole(REWARDS_DISTRIBUTOR_ROLE, msg.sender) onlyGnosisSafe nonReentrant {
-        emit RoleGranted(REWARDS_DISTRIBUTOR_ROLE, msg.sender, msg.sender);
+    require(msg.sender == gnosisSafe, "Not authorized");
+    emit RoleGranted(REWARDS_DISTRIBUTOR_ROLE, msg.sender, msg.sender);
     }
 
 // Mint 25% of MAX_SUPPLY to the deployer or a specified address

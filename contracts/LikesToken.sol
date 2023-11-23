@@ -382,23 +382,7 @@ emit TokensMinted(account, amount);
         }
     }
 
-    // Function to mark recipients who have already received their airdrop
-    // This function can only be called by the AIRDROPPER_ROLE
-    function markAirdropRecipients(address[] memory recipients) external onlyRole(AIRDROPPER_ROLE) nonReentrant {
-        for (uint256 i = 0; i < recipients.length; i++) {
-            airdropRecipients[recipients[i]] = 0;
-            event AirdropRecipientMarked(recipients[i]);
-        emit AirdropRecipientsAdded(_recipients, _amounts);
-        }
-    }
 
-    // Function to manual reset the airdrop recipient list clearing all recipients and marking them as not airdropped
-    // This function can only be called by the AIRDROPPER_ROLE
-    function resetAirdropList() external onlyRole(AIRDROPPER_ROLE) nonReentrant {
-        delete airdropList;
-            airdropList = new AirdropRecipient[](0);
-            event AirdropListReset();
-    }
 
     // Function to execute a module
     // This function can only be called by the Gnosis Safe

@@ -37,7 +37,8 @@ steps:
   - docker push ${{ image.name }}:${{ github.sha }}
 
 - name: Notify Slack
-  if: ${{ failure() }}
+  if: ${{ failure()
+  run: curl -X POST -H 'Content-type: application/json' --data '{"text":"CI/CD Pipeline Failed"}' ${{ secrets.SLACK_WEBHOOK }}
   image: plugins/slack
   settings:
     webhook: ${{ secrets.SLACK_WEBHOOK }}

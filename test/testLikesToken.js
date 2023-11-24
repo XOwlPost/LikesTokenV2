@@ -8,7 +8,7 @@ describe("LikesToken Contract", function () {
     
         // Use addresses from the signers for testing
         const recipients = [addr1.address, addr2.address, gnosisSafeMock.address, owner.address];
-        const amounts = ["10000", "20000", "30000", "40000"]; // Ensure correct token amounts
+        const amounts = ["1000", "2000", "3000", "4000"]; // Ensure correct token amounts
     
         // Deploying the LikesToken contract
         const LikesToken = await ethers.getContractFactory("LikesToken");

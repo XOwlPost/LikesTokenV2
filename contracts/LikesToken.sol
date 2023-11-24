@@ -412,4 +412,4 @@ emit TokensMinted(account, amount);
     // Emit an event for successful setting a module hook address
     emit ModuleHookAddressUpdated(oldAddress, _moduleHookAddress);
 }
-    
+

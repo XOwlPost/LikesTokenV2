@@ -1,5 +1,5 @@
 # Start from the Node.js slim image for a smaller, more secure base image
-# This is the build stage where you compile/build your application
+# This is the 'build' stage where you compile/build your application
 FROM node:21-bookworm-slim as build
 
 # Set the working directory inside the container to /app
@@ -17,7 +17,7 @@ COPY . .
 # Here you would add your build step, for example:
 RUN yarn build
 
-# The final stage, which will be the image used in production
+# The final stage, which will be the image used in production called 'release'
 # Start from the Node.js slim image again for a smaller, more secure final image
 FROM node:21-bookworm-slim as release
 

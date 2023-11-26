@@ -8,16 +8,33 @@ WORKDIR /app
 # Copy package.json and yarn.lock to /app
 COPY package.json yarn.lock ./
 
+# Install git and other dependencies
+RUN apt-get update && apt-get install -y git
+
 # Install dependencies using yarn
 RUN yarn install --cache-clean
+
+RUN ls -la /app
+RUN ls -la /app/node_modules
+RUN ls -la /app/node_modules/.bin
+RUN ls -la /app/node_modules/.bin/next
 
 # Copy the rest of the project into /app
 COPY . .
 
 # Here you would add your build step, for example:
+# RUN yarn build
 RUN yarn build
 
-# The final stage, which will be the image used in production called 'release'
+# Verify that the build was successful
+RUN ls -la /app/.next
+
+# Make sure /app/data is created and populated here
+RUN mkdir -p /app/data
+
+# Rest of your Dockerfile...
+
+# The final stage, which will be the image used in production called 'release' stage
 # Start from the Node.js slim image again for a smaller, more secure final image
 FROM node:21-bookworm-slim as release
 

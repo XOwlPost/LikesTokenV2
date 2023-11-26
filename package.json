@@ -10,7 +10,8 @@
     },
     "keywords": [
         "LikesToken",
-        "LTXO"
+        "LTXO",
+        "XO"
     ],
     "author": "Team-XO",
     "license": "SPDX-License-Identifier: MIT",

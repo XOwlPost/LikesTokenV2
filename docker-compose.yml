@@ -1,14 +1,24 @@
 version: '3'
 services:
   app:
-    # other configurations for the app...
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
     environment:
       DB_HOST: ${DB_HOST}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-    # Specify ports and volumes for your app if needed
-
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/public
+      - /app/uploads
+      - /app/.next
+                        
   db:
     image: postgres
     environment:
@@ -31,4 +41,4 @@ services:
 
 volumes:
   likestoken-data:
-     Define the properties of 'likestoken-data' volume here if necessary
+     # Define the properties of 'likestoken-data' volume here if necessary

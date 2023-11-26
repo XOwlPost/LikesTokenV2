@@ -23,8 +23,8 @@ RUN ls -la /app/node_modules/.bin/next
 COPY . .
 
 # Here you would add your build step, for example:
-# RUN yarn build
-RUN yarn build
+# RUN npx hardhat compile
+RUN npx hardhat compile
 
 # Verify that the build was successful
 RUN ls -la /app/.next

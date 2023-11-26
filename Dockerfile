@@ -17,7 +17,9 @@ RUN yarn install --cache-clean
 RUN ls -la /app
 RUN ls -la /app/node_modules
 RUN ls -la /app/node_modules/.bin
-RUN ls -la /app/node_modules/.bin/next
+
+# Yarn build
+RUN yarn build
 
 # Copy the rest of the project into /app
 COPY . .
@@ -27,7 +29,7 @@ COPY . .
 RUN npx hardhat compile
 
 # Verify that the build was successful
-RUN ls -la /app/.next
+RUN ls -la /app
 
 # Make sure /app/data is created and populated here
 RUN mkdir -p /app/data

@@ -16,12 +16,6 @@ RUN yarn install --cache-clean
 # Copy the rest of the project into /app
 COPY . .
 
-# Print contents of /app for debugging
-RUN ls -la /app
-
-# Print environment variables for debugging (if needed)
-RUN printenv
-
 # Yarn build
 RUN yarn build
 

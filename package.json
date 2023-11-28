@@ -1,7 +1,7 @@
 {
     "name": "LikesToken",
     "version": "0.2.0",
-    "description": "Likes Token V2",
+    "description": "Likes Token V2 - A transformative Ethereum-based token fostering a sustainable and user-centric digital ecosystem. Evolving from the original Likes Token, this version amplifies its commitment to environmental sustainability and superior user experience. With its innovative use of blockchain technology, Likes Token V2 enables secure, decentralized transactions while actively supporting eco-friendly initiatives. It's a cornerstone in XO's mission to blend cutting-edge technology with social responsibility, ensuring that digital asset exchange not only serves its community but also contributes positively to global sustainability goals.",
     "main": "index.js",
     "scripts": {
         "start": "node app.js",
@@ -14,16 +14,18 @@
         "XO"
     ],
     "author": "Team-XO",
-    "license": "SPDX-License-Identifier: MIT",
+    "license": "MIT",
     "devDependencies": {
         "@nomiclabs/hardhat-ethers": "^3.0.0-beta.0",
         "@nomiclabs/hardhat-waffle": "^2.0.6",
+        "@nomiclabs/hardhat-etherscan": "^3.1.7",
         "@openzeppelin/hardhat-upgrades": "^2.4.1",
         "chai": "^4.3.10",
         "ethereum-waffle": "^2.2.0",
         "ethers": "^6.1.0",
         "hardhat": "^2.19.0",
         "typescript": "^5.2.2"
+        
     },
     "dependencies": {
         "@chainlink/contracts": "^0.5.1",

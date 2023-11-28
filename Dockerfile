@@ -1,6 +1,5 @@
-# Start from the Node.js slim image for a smaller, more secure base image
-# This is the 'build' stage where you compile/build your application
-FROM node:21-bookworm-slim as build
+# Start from the Node.js slim LTS image for a smaller, more secure base image
+FROM node:16-bullseye-slim as build
 
 # Set the working directory inside the container to /app
 WORKDIR /app
@@ -14,37 +13,31 @@ RUN apt-get update && apt-get install -y git
 # Install dependencies using yarn
 RUN yarn install --cache-clean
 
+# Copy the rest of the project into /app
+COPY . .
+
+# Print contents of /app for debugging
 RUN ls -la /app
-RUN ls -la /app/node_modules
-RUN ls -la /app/node_modules/.bin
+
+# Print environment variables for debugging (if needed)
+RUN printenv
 
 # Yarn build
 RUN yarn build
 
-# Copy the rest of the project into /app
-COPY . .
-
-# Here you would add your build step, for example:
-# RUN npx hardhat compile
+# Compile using Hardhat
 RUN npx hardhat compile
 
-# Verify that the build was successful
-RUN ls -la /app
+# Rest of the build stage...
 
-# Make sure /app/data is created and populated here
-RUN mkdir -p /app/data
-
-# Rest of your Dockerfile...
-
-# The final stage, which will be the image used in production called 'release' stage
-# Start from the Node.js slim image again for a smaller, more secure final image
-FROM node:21-bookworm-slim as release
+# The final stage, which will be the image used in production
+FROM node:16-bullseye-slim as release
 
 # Set the working directory inside the container to /app
 WORKDIR /app
 
 # Copy over the built application from the build stage
-COPY --from=build /app/data /app
+COPY --from=build /app /app
 
 # Add a user with a home directory and no password set
 RUN adduser --home /home/appuser --disabled-password --gecos '' appuser \
@@ -58,9 +51,6 @@ EXPOSE 3000
 
 # Set any environment variables you might need
 ENV NODE_ENV=production
-
-# Copy entry point script into the container
-COPY --from=build /app/entrypoint.sh /app/
 
 # Set the entry point script as the default command
 CMD ["/app/entrypoint.sh"]

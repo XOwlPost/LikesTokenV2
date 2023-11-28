@@ -16,9 +16,9 @@
     "author": "Team-XO",
     "license": "MIT",
     "devDependencies": {
-        "@nomicfoundation/hardhat-ethers": "^3.0.0",
-        "@nomicfoundation/hardhat-verify": "^1.1.0",
+        "@nomiclabs/hardhat-ethers": "^2.0.0",
         "@nomiclabs/hardhat-waffle": "^2.0.6",
+        "@nomiclabs/hardhat-etherscan": "3.1.7",
         "@openzeppelin/hardhat-upgrades": "^2.4.1",
         "chai": "^4.3.10",
         "ethereum-waffle": "^2.2.0",

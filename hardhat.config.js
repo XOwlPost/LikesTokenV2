@@ -3,8 +3,7 @@ require("@nomiclabs/hardhat-etherscan"); // For etherscan verification
 require("@nomiclabs/hardhat-ethers"); // For ethers.js
 require('dotenv').config(); // For .env file
 require('@openzeppelin/hardhat-upgrades'); // For upgradeable contracts
-require('@nomicfoundation/hardhat-ethers'); // For ethers.js
-require('@nomicfoundation/hardhat-verify'); // For etherscan verification
+require('@nomiclabs/hardhat-etherscan'); // For etherscan verification
 
 console.log(process.env.SEPOLIA_PRIVATE_KEY); // Sepolia private key
 console.log(process.env.SEPOLIA_RPC_URL); // Sepolia RPC URL

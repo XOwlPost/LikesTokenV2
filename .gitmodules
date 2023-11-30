@@ -1,0 +1,3 @@
+[submodule "XO"]
+	path = XO
+	url = https://github.com/XOwlPost/XO
